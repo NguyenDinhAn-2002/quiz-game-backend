@@ -1,0 +1,1 @@
+//Định nghĩa cấu trúc dữ liệu MongoDB

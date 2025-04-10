@@ -1,0 +1,1 @@
+//Các hàm xử lý chính khi người dùng gọi API (tương ứng với từng route)
