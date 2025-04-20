@@ -1,13 +1,28 @@
-//Tương tác real-time với client sử dụng Socket.IO
+
 import { Server } from 'socket.io';
 
-export default function initSocket(io: Server) {
+export const setupSocket = (io: Server) => {
   io.on('connection', (socket) => {
-    console.log('User connected:', socket.id);
+    console.log(`🟢 User connected: ${socket.id}`);
 
-    socket.on('join_room', ({ pin }) => {
-      socket.join(pin);
-      socket.to(pin).emit('user_joined', { userId: socket.id });
+    socket.on('join-room', (roomId: string, playerName: string) => {
+      socket.join(roomId);
+      console.log(`${playerName} joined room ${roomId}`);
+
+      // Gửi thông báo đến các người khác trong phòng
+      socket.to(roomId).emit('player-joined', playerName);
+    });
+
+    socket.on('start-quiz', (roomId: string, quizData: any) => {
+      io.to(roomId).emit('quiz-started', quizData);
+    });
+
+    socket.on('submit-answer', (roomId: string, data: any) => {
+      socket.to(roomId).emit('player-answered', data);
+    });
+
+    socket.on('disconnect', () => {
+      console.log(`🔴 User disconnected: ${socket.id}`);
     });
   });
-}
+};

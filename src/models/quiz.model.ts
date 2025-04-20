@@ -4,6 +4,7 @@ import questionSchema from "./question.model";
 const quizSchema = new mongoose.Schema(
   {
     title: { type: String, required: true },
+    thumbnail: String,
     description: String,
     tags: [{ type: mongoose.Schema.Types.ObjectId, ref: "Tag" }],
     questions: [questionSchema],

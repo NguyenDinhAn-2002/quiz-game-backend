@@ -4,8 +4,10 @@ import session from 'express-session';
 import passport from 'passport';
 import dotenv from 'dotenv';
 import routes from './routes';
+import fileUpload from 'express-fileupload';
 
 import configurePassport from './config/passport';
+
 configurePassport(passport);
 
 dotenv.config();
@@ -15,6 +17,8 @@ const app = express();
 
 app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
 app.use(express.json());
+app.use(express.urlencoded({ extended: true })); 
+app.use(fileUpload({ useTempFiles: true })); 
 app.use(session({
     secret: process.env.SESSION_SECRET || 'default-secret', 
     resave: false,
@@ -36,5 +40,6 @@ app.get('/auth/google/callback',
 
 app.use('/api', routes);
 
+  
 
 export default app;
