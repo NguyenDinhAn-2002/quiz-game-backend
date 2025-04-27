@@ -18,7 +18,7 @@ const app = express();
 app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true })); 
-app.use(fileUpload({ useTempFiles: true })); 
+app.use(fileUpload({ useTempFiles: false })); 
 app.use(session({
     secret: process.env.SESSION_SECRET || 'default-secret', 
     resave: false,
