@@ -5,10 +5,10 @@ export const socketHandler = (io: Server) => {
   io.on("connection", (socket) => {
     console.log("🔌 New connection:", socket.id);
 
-    // ========== HOST TẠO PHÒNG ==========
-    socket.on("host-create-room", ({ quizId, name, avatar, asPlayer }, callback) => {
+    // ========== HOST TẠO PHÒNG ==========  
+    socket.on("host-create-room", ({ quizId }, callback) => {
       const pin = Math.floor(100000 + Math.random() * 900000).toString(); // Tạo pin ngẫu nhiên
-    
+
       rooms[pin] = {
         quizId,
         hostId: socket.id,
@@ -16,27 +16,15 @@ export const socketHandler = (io: Server) => {
         currentQuestion: 0,
         players: [],
       };
-    
-      const hostPlayer = {
-        socketId: socket.id,
-        name,
-        avatar,
-        score: 0,
-        isHost: true,
-      };
-    
-      if (asPlayer) {
-        rooms[pin].players.push(hostPlayer);
-      }
-    
+
       socket.join(pin);
-      console.log(`🏠 Room created: PIN ${pin} by Host ${name} (${socket.id}) as ${asPlayer ? "player" : "observer"}`);
-    
-      callback({ pin }); // Gửi lại pin cho frontend
-      io.to(pin).emit("room-updated", rooms[pin]); // Cập nhật trạng thái phòng cho tất cả người chơi trong phòng
+      console.log(`🏠 Room created: PIN ${pin} by Host (${socket.id})`);
+
+      callback({ pin, hostId: socket.id }); // Gửi lại pin cho frontend
+      io.to(pin).emit("room-updated", rooms[pin]); // Cập nhật phòng
     });
-    
-    // ========== NGƯỜI CHƠI JOIN PHÒNG ==========
+
+    // ========== NGƯỜI CHƠI JOIN PHÒNG ==========  
     socket.on("player-join-room", ({ pin, name, avatar }, callback) => {
       const room = rooms[pin];
       if (!room) {
@@ -57,13 +45,15 @@ export const socketHandler = (io: Server) => {
         name,
         avatar,
         score: 0,
-        isHost: false,
+        isHost: socket.id === room.hostId, // Xác định người host (nếu host tự join)
       });
       socket.join(pin);
       console.log(`🙋 Player ${name} joined Room ${pin}`);
       io.to(pin).emit("room-updated", room);
       callback({ success: true });
     });
+
+    // (Các phần còn lại: start-game, submit-answer, next-question, kick-player, disconnect giữ nguyên như bạn đã viết)
 
     // ========== HOST BẮT ĐẦU GAME ==========
     socket.on("start-game", ({ pin }) => {
