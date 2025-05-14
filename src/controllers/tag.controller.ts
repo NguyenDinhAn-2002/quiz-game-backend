@@ -21,3 +21,19 @@ export const createTag = async (req: Request, res: Response): Promise<void> => {
     res.status(500).json({ message: 'Tạo tag thất bại', error: err });
   }
 };
+export const getTagById = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    const tag = await Tag.findById(id);
+    if (!tag) {
+      res.status(404).json({ message: 'Không tìm thấy tag' });
+      return;
+    }
+
+    res.status(200).json(tag);
+  } catch (err) {
+    console.error('[❌ GET TAG BY ID ERROR]:', err);
+    res.status(500).json({ message: 'Lỗi khi lấy tag', error: err });
+  }
+};

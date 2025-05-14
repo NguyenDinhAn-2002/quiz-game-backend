@@ -5,6 +5,7 @@ import {
   getQuizById,
   deleteQuiz,
   updateQuiz,
+  createQuizWithAI,
 } from "../controllers/quiz.controller";
 
 
@@ -16,6 +17,8 @@ router.get('/', getAllQuizzes);
 router.get('/:id', getQuizById);
 router.delete('/:id', deleteQuiz);
 router.put('/quizzes/:id', updateQuiz); 
+router.post('/generate-ai', createQuizWithAI);
+
 
 
 export default router;

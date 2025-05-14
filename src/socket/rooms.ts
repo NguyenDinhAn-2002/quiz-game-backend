@@ -1,4 +1,3 @@
-
 export const rooms: Record<
   string,
   {
@@ -12,6 +11,7 @@ export const rooms: Record<
       avatar: string;
       score: number;
       isHost: boolean;
+      isConnected: boolean; // ✅ Trạng thái kết nối của player
     }[];
   }
 > = {};

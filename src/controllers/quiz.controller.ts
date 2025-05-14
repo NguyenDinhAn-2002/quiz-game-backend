@@ -2,7 +2,8 @@
 import Quiz from '../models/quiz.model';
 import { Request, Response } from 'express';
 import { UploadedFile } from 'express-fileupload';
-import { uploadSingleFile } from '../middlewares/cloudinary.middleware';
+import { uploadSingleFile } from '../services/cloudinary.service';
+import { generateQuizWithAI } from '../services/ai.service'; 
 
 export const createQuiz = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -137,5 +138,34 @@ export const updateQuiz = async (req: Request, res: Response): Promise<void> => 
   } catch (err) {
     console.error('[❌ UPDATE QUIZ ERROR]:', err);
     res.status(500).json({ message: 'Cập nhật quiz thất bại', error: err });
+  }
+};
+
+export const createQuizWithAI = async (req: Request, res: Response): Promise<void> => {
+  const { topic, numberOfQuestions } = req.body;
+
+  try {
+    const aiQuiz = await generateQuizWithAI(topic, numberOfQuestions);
+
+    if (!aiQuiz || !aiQuiz.questions || !Array.isArray(aiQuiz.questions) || aiQuiz.questions.length === 0) {
+      res.status(400).json({ message: 'Dữ liệu quiz AI trả về không hợp lệ hoặc trống' });
+      return;
+    }
+
+    const savedQuiz = await new Quiz({
+      title: `Quiz về ${topic}`,
+      description: `Quiz về chủ đề ${topic} tạo bởi AI.`,
+      questions: aiQuiz.questions,
+      createdBy: req.body.createdBy || null,
+      tags: req.body.tags ? JSON.parse(req.body.tags) : [],
+    }).save();
+
+    res.status(201).json({
+      message: 'Tạo quiz thành công',
+      data: savedQuiz,
+    });
+  } catch (err) {
+    console.error('[❌ CREATE QUIZ ERROR]:', err);
+    res.status(500).json({ message: 'Tạo quiz thất bại', error: err.message || err });
   }
 };
