@@ -41,7 +41,8 @@ export const login = async (req: Request, res: Response) => {
     const isMatch = await bcrypt.compare(password, user.password || '');
     if (!isMatch) return res.status(401).json({ message: 'Sai mật khẩu' });
 
-    const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
+
 
     res.json({ user, token });
   } catch (err) {

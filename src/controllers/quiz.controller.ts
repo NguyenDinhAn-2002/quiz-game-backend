@@ -4,6 +4,7 @@ import { Request, Response } from 'express';
 import { UploadedFile } from 'express-fileupload';
 import { uploadSingleFile } from '../services/cloudinary.service';
 import { generateQuizWithAI } from '../services/ai.service'; 
+import Tag from '../models/tag.model';
 
 export const createQuiz = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -46,7 +47,7 @@ export const createQuiz = async (req: Request, res: Response): Promise<void> => 
       thumbnail: thumbnailUrl,
       tags: req.body.tags ? JSON.parse(req.body.tags) : [],
       questions: processedQuestions,
-      createdBy: req.body.createdBy || null,
+      createdBy: (req as any).user._id,
     });
 
     const saved = await newQuiz.save();
@@ -142,30 +143,48 @@ export const updateQuiz = async (req: Request, res: Response): Promise<void> => 
 };
 
 export const createQuizWithAI = async (req: Request, res: Response): Promise<void> => {
-  const { topic, numberOfQuestions } = req.body;
+  const { topic, numberOfQuestions, tags = [], createdBy } = req.body;
 
   try {
     const aiQuiz = await generateQuizWithAI(topic, numberOfQuestions);
 
-    if (!aiQuiz || !aiQuiz.questions || !Array.isArray(aiQuiz.questions) || aiQuiz.questions.length === 0) {
+    if (!aiQuiz || !Array.isArray(aiQuiz.questions) || aiQuiz.questions.length === 0) {
       res.status(400).json({ message: 'Dữ liệu quiz AI trả về không hợp lệ hoặc trống' });
       return;
     }
 
-    const savedQuiz = await new Quiz({
+    // 🔽 Kiểm tra và thêm các tag mới vào DB nếu chưa tồn tại
+    const uniqueTags = Array.from(new Set((tags as string[]).map((tag: string) => tag.trim())));
+    const tagDocs = await Promise.all(
+      uniqueTags.map(async (tagName) => {
+        let existingTag = await Tag.findOne({ name: tagName });
+        if (!existingTag) {
+          existingTag = await Tag.create({ name: tagName });
+        }
+        return existingTag._id; // Lưu ID của tag
+      })
+    );
+
+    // 🔽 Tạo quiz
+    const newQuiz = new Quiz({
       title: `Quiz về ${topic}`,
       description: `Quiz về chủ đề ${topic} tạo bởi AI.`,
       questions: aiQuiz.questions,
-      createdBy: req.body.createdBy || null,
-      tags: req.body.tags ? JSON.parse(req.body.tags) : [],
-    }).save();
+      createdBy: (req as any).user._id,
+      tags: tagDocs, // Lưu danh sách ID của các tag
+    });
+
+    const savedQuiz = await newQuiz.save();
 
     res.status(201).json({
       message: 'Tạo quiz thành công',
       data: savedQuiz,
     });
-  } catch (err) {
-    console.error('[❌ CREATE QUIZ ERROR]:', err);
-    res.status(500).json({ message: 'Tạo quiz thất bại', error: err.message || err });
+  } catch (err: any) {
+    console.error('[❌ CREATE QUIZ with AI ERROR]:', err);
+    res.status(500).json({
+      message: 'Tạo quiz thất bại',
+      error: err.message || err,
+    });
   }
 };

@@ -6,19 +6,22 @@ import {
   deleteQuiz,
   updateQuiz,
   createQuizWithAI,
-} from "../controllers/quiz.controller";
-
-
+} from '../controllers/quiz.controller';
+import { authenticate, authorizeOwnerOrAdmin } from '../middlewares/auth.middlewares';
 
 const router = Router();
 
-router.post('/', createQuiz);
+
+router.post('/', authenticate, createQuiz);
+
 router.get('/', getAllQuizzes);
+
 router.get('/:id', getQuizById);
-router.delete('/:id', deleteQuiz);
-router.put('/quizzes/:id', updateQuiz); 
-router.post('/generate-ai', createQuizWithAI);
 
 
+router.delete('/:id', authenticate, authorizeOwnerOrAdmin, deleteQuiz);
+router.put('/:id', authenticate, authorizeOwnerOrAdmin, updateQuiz);
+
+router.post('/generate-ai', authenticate, createQuizWithAI);
 
 export default router;
