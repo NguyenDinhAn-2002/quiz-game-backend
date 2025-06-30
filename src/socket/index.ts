@@ -282,17 +282,26 @@ export const socketHandler = (io: Server) => {
     //
     // Host goes to next question
     //
-    socket.on("next-question", ({ roomId, playerId }) => {
-      const room = rooms.get(roomId);
-      if (!room) return;
+  socket.on("next-question", ({ roomId, playerId }) => {
+  const room = rooms.get(roomId);
+  if (!room) {
+    return;
+  }
 
-      if (playerId !== room.hostId) {
-        return socket.emit("error", "Chỉ host mới được chuyển câu hỏi");
-      }
+  if (playerId !== room.hostId) {
+    return socket.emit("error", "Chỉ host mới được chuyển câu hỏi");
+  }
 
-      room.currentQuestionIndex++;
-      sendQuestion(io, roomId);
-    });
+  if (!room.questionEnded) {
+    // Kết thúc câu hỏi hiện tại nhưng không tự động next câu hỏi sau 5s
+    endQuestion(io, roomId, false);
+  }
+
+  // Chuyển sang câu hỏi tiếp theo
+  room.currentQuestionIndex++;
+  sendQuestion(io, roomId);
+});
+
 
     //
     // Host pauses the game
@@ -548,7 +557,7 @@ function sendQuestion(io: Server, roomId: string) {
   });
 }
 
-function endQuestion(io: Server, roomId: string) {
+function endQuestion(io: Server, roomId: string, autoNext = true) {
   const room = rooms.get(roomId);
   if (!room || room.questionEnded) return;
 
@@ -579,19 +588,20 @@ function endQuestion(io: Server, roomId: string) {
     index: room.currentQuestionIndex,
   });
 
-  // Wait 3 seconds for temporary leaderboard, then send full scoreboard
   setTimeout(() => {
     io.to(roomId).emit("scoreboard", {
       players: results,
     });
 
-    // After 5 more seconds, move to next question
-    setTimeout(() => {
-      room.currentQuestionIndex++;
-      sendQuestion(io, roomId);
-    }, 5000);
+    if (autoNext) {
+      setTimeout(() => {
+        room.currentQuestionIndex++;
+        sendQuestion(io, roomId);
+      }, 5000);
+    }
   }, 3000);
 }
+
 
 function calculateScore(question: any, playerAnswer: any): number {
   if (!question || !question.options || question.options.length === 0) return 0;

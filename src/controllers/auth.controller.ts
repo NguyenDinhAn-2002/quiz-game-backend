@@ -43,7 +43,6 @@ export const login = async (req: Request, res: Response) => {
 
     const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
 
-
     res.json({ user, token });
   } catch (err) {
     res.status(500).json({ message: 'Lỗi đăng nhập', error: err });
