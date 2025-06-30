@@ -11,7 +11,7 @@ export default function configurePassport(passport: passport.PassportStatic) {
       {
         clientID: process.env.GOOGLE_CLIENT_ID!,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-        callbackURL: 'http://localhost:5000/auth/google/callback', // URL để xử lý kết quả trả về từ Google
+        callbackURL: 'http://quiz-game-backend-production-d9b4.up.railway.app/auth/google/callback', // URL để xử lý kết quả trả về từ Google
       },
       async (accessToken, refreshToken, profile, done) => {
         try {
