@@ -9,7 +9,7 @@ const callOpenRouterAI = async (prompt: string): Promise<any> => {
     const response = await axios.post(
       "https://openrouter.ai/api/v1/chat/completions",
       {
-        model: "nousresearch/deephermes-3-mistral-24b-preview:free",
+        model: "mistralai/mistral-small-3.2-24b-instruct:free",
         messages: [{ role: "user", content: prompt }],
         temperature: 0.7,
       },
