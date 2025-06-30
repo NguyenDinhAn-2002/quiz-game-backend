@@ -14,6 +14,6 @@ socketHandler(io); // Khởi tạo socket server
 
 connectDB().then(() => {
   server.listen(process.env.PORT, () => {
-    console.log(`🚀 Server started at http://localhost:${process.env.PORT}`);
+    console.log(`🚀 Server is running`);
   });
 });
